@@ -1,0 +1,15 @@
+import Highcharts from "highcharts";
+import { channelMix, getPeriodMetrics, monthlyMetrics } from "./data.js";
+import "./style.css";
+const money = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
+const fmt = new Intl.NumberFormat("en-US");
+const base = { chart:{backgroundColor:"transparent",style:{fontFamily:"Inter, sans-serif"},spacing:[12,4,8,4]}, title:{text:null},credits:{enabled:false},accessibility:{enabled:true},legend:{enabled:false},xAxis:{categories:[],lineColor:"transparent",tickLength:0,labels:{style:{color:"#7d899c"}}},yAxis:{title:{text:null},gridLineColor:"#edf0f5",labels:{style:{color:"#7d899c"}}},tooltip:{backgroundColor:"#17243a",borderWidth:0,borderRadius:8,style:{color:"#fff"}} };
+let period = 12;
+function rows(){return monthlyMetrics.slice(-period);}
+function revenueChart(data,type){Highcharts.chart("revenue-chart",{...base,chart:{...base.chart,type},xAxis:{...base.xAxis,categories:data.map(x=>x.month)},yAxis:{...base.yAxis,labels:{formatter(){return "$"+Math.round(this.value/1000)+"k";}}},plotOptions:{series:{lineWidth:3,marker:{enabled:false}},areaspline:{fillOpacity:.12}},tooltip:{...base.tooltip,pointFormat:"<b>${point.y:,.0f}</b>"},series:[{name:"Revenue",color:"#7167f8",data:data.map(x=>x.revenue)}]});}
+function ordersChart(data){Highcharts.chart("orders-chart",{...base,chart:{...base.chart,type:"column"},xAxis:{...base.xAxis,categories:data.map(x=>x.month)},plotOptions:{column:{borderRadius:5,borderWidth:0,pointPadding:.12}},series:[{name:"Orders",color:"#38a6d9",data:data.map(x=>x.orders)}]});}
+function channelChart(){Highcharts.chart("channels-chart",{chart:{type:"pie",backgroundColor:"transparent",height:220},title:{text:"100%<br><span style=\"font-size:11px;color:#7d899c\">Revenue mix</span>",align:"center",verticalAlign:"middle",y:7,useHTML:true,style:{color:"#17243a",fontSize:"22px",fontWeight:"700"}},credits:{enabled:false},accessibility:{enabled:true},tooltip:{pointFormat:"<b>{point.percentage:.1f}%</b>"},plotOptions:{pie:{innerSize:"74%",borderWidth:0,dataLabels:{enabled:false}}},series:[{name:"Share",data:channelMix}]});document.querySelector("#channel-legend").innerHTML=channelMix.map(x=>"<p><i style=\"background:"+x.color+"\"></i>"+x.name+" <b>"+x.y+"%</b></p>").join("");}
+function update(){const data=rows();const k=getPeriodMetrics(data);document.querySelector("#revenue-kpi").textContent=money.format(k.revenue);document.querySelector("#orders-kpi").textContent=fmt.format(k.orders);document.querySelector("#aov-kpi").textContent=money.format(k.averageOrderValue);const active=document.querySelector("button.selected");revenueChart(data,active?active.dataset.type:"spline");ordersChart(data);}
+document.querySelector("#range").addEventListener("change",e=>{period=Number(e.target.value);update();});
+document.querySelectorAll("[data-type]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-type]").forEach(b=>b.classList.toggle("selected",b===button));revenueChart(rows(),button.dataset.type);}));
+update();channelChart();
