@@ -20,6 +20,7 @@ npm test
 npm run build
 npm run preview
 ```
+Frontend example: https://highcharts-rust.vercel.app/
 
 The dashboard includes revenue, order-volume, and sales-channel charts, six/twelve-month filtering, KPI summaries, and a responsive layout. Its data is illustrative; replace `web/src/data.js` with an API adapter for real data.
 
